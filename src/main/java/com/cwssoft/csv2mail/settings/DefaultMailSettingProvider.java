@@ -1,12 +1,10 @@
 package com.cwssoft.csv2mail.settings;
 
-import com.cwssoft.mail.settings.MailSetting;
-import com.cwssoft.mail.settings.MailSettingProvider;
-
 import java.util.Optional;
 
 public class DefaultMailSettingProvider implements MailSettingProvider {
 
+    private static final String ENABLED =  "mail.enabled";
     private static final String HOST =  "mail.host";
     private static final String USER =  "mail.user";
     private static final String PASS =  "mail.pass";
@@ -31,47 +29,47 @@ public class DefaultMailSettingProvider implements MailSettingProvider {
     }
 
     @Override
-    public MailSetting getHost() {
-        return getByKey(HOST).orElse(null);
+    public Optional<MailSetting> getHost() {
+        return getByKey(HOST);
     }
 
     @Override
-    public MailSetting getEnabled() {
-        return new MailSetting("mail.enabled", "true");
+    public Optional<MailSetting> getEnabled() {
+        return getByKey(ENABLED);
     }
 
     @Override
-    public MailSetting getFrom() {
-        return getByKey(FROM).orElse(null);
+    public Optional<MailSetting> getFrom() {
+        return getByKey(FROM);
     }
 
     @Override
-    public MailSetting getUser() {
-        return getByKey(USER).orElse(null);
+    public Optional<MailSetting> getUser() {
+        return getByKey(USER);
     }
 
     @Override
-    public MailSetting getPassword() {
-        return getByKey(PASS).orElse(null);
+    public Optional<MailSetting> getPassword() {
+        return getByKey(PASS);
     }
 
     @Override
-    public MailSetting getPort() {
-        return getByKey(PORT).orElse(null);
+    public Optional<MailSetting> getPort() {
+        return getByKey(PORT);
     }
 
     @Override
-    public MailSetting getTls() {
-        return getByKey(SSL).orElse(null);
+    public Optional<MailSetting> getSslOnConnect() {
+        return getByKey(SSL);
     }
 
     @Override
-    public MailSetting getDebug() {
-        return getByKey(DEBUG).orElse(null);
+    public Optional<MailSetting> getDebug() {
+        return getByKey(DEBUG);
     }
 
     @Override
-    public MailSetting getRateLimit() {
-        return getByKey(RATELIMIT).orElse(null);
+    public Optional<MailSetting> getRateLimit() {
+        return getByKey(RATELIMIT);
     }
 }

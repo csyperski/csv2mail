@@ -16,6 +16,12 @@ public class SettingService {
     public static final String EMAIL_COLUMN = "csv.field.email";
     public static final String EMAIL_SUBJECT = "mail.title";
     public static final String EMAIL_TEXT_BODY = "mail.body.text";
+    public static final String EMAIL_QUEUE_SIZE = "mail.queue.maxsize";
+    public static final String EMAIL_QUEUE_TIMEOUT = "mail.queue.timeout";
+    public static final String EMAIL_CSV_OUTPUT = "csv.output.fields";
+    public static final String EMAIL_CSV_OUTPUT_FILENAME = "csv.output.filename";
+    public static final String EMAIL_CSV_OUTPUT_DESCRIPTION = "csv.output.description";
+
 
     private volatile Properties properties;
     private String path;

@@ -28,7 +28,7 @@ public class BodyTemplate {
         this.body = body;
     }
 
-    public String process(String email, List<CSVRecord> records, Map<String, String> otherValues) {
+    public String process(String email, List<CSVRecord> records) {
         if ( body != null && records != null ) {
 
             String currentDate = DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date());

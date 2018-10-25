@@ -1,0 +1,7 @@
+student-name,email,student-number,enrollment-count,f-count,f-courses,d-count,d-courses
+"student1, student1",user1@localhost.loc,123,7,,,1,American History
+"student2, student2",user1@localhost.loc,124,7,5,"Math 101, English, Science, PE, Reading",2,"PE, READING 3"
+"student3, student3",user1@localhost.loc,125,6,5,"English 9, Human Geography, Physical Education 10 S1, Pre-Algebra, READING 3",1,Biology
+"student4, student4",user2@localhost.loc,126,6,2,"Life Skills, Health",,
+"student5, student5",user2@localhost.loc,127,6,2,"English 10, Physical Education",1,U.S. History
+"student6, student6",user2@localhost.loc,128,7,,,1,Geometry

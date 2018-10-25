@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.util.*;
 
 import static com.cwssoft.csv2mail.mail.EmailUtils.isValidEmail;
+import static com.cwssoft.csv2mail.settings.SettingService.EMAIL_CSV_OUTPUT_ATTACH;
 import static com.cwssoft.csv2mail.settings.SettingService.EMAIL_QUEUE_SIZE;
 import static com.cwssoft.csv2mail.settings.SettingService.EMAIL_QUEUE_TIMEOUT;
 
@@ -106,6 +107,7 @@ public class Driver {
             return false;
         }
 
+        final boolean attach = settingService.getSetting(EMAIL_CSV_OUTPUT_ATTACH).map( Boolean::valueOf ).orElse(Boolean.FALSE);
         final String title = settingService.getSetting(SettingService.EMAIL_SUBJECT).orElse("** No Subject **");
         final String textBody = settingService.getSetting(SettingService.EMAIL_TEXT_BODY).orElse("");
         final String csvOutputFields = settingService.getSetting(SettingService.EMAIL_CSV_OUTPUT).orElse("");
@@ -130,7 +132,7 @@ public class Driver {
             return false;
         }
 
-        if ( csvOutputFields == null || csvOutputFields.trim().length() == 0 ) {
+        if ( csvOutputFields == null  ) {
             logger.warn("Skipping: {} - Invalid csvOutputFields.");
             return false;
         }
@@ -140,16 +142,17 @@ public class Driver {
             return false;
         }
 
-
         final List<String> csvFields = Splitter.on(CharMatcher.anyOf(","))
                 .omitEmptyStrings()
                 .trimResults().splitToList(csvOutputFields);
 
-        Optional<String> maybeSingleEmailData = buildSingleEmailCsv(csvFields, records);
+        Optional<String> maybeSingleEmailData = Optional.empty();
+        if ( attach ) {
+            maybeSingleEmailData = buildSingleEmailCsv(csvFields, records);
+        }
 
-        String body = bodyTemplate.process(email, records);
+        final String body = bodyTemplate.process(email, records);
         if (body != null) {
-
             Optional<DataSource> ds = Optional.empty();
             if ( maybeSingleEmailData.isPresent() ) {
                 try (InputStream inputStream = new ByteArrayInputStream(maybeSingleEmailData.map(s -> s.getBytes()).orElse( new byte[] {} ));) {

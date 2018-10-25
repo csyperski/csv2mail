@@ -21,6 +21,7 @@ public class BodyTemplate {
     private static final String XCURRENTDATE = "${x-current-date}";
     private static final String XTEMPLATESTART = "${x-repeat-start}";
     private static final String XTEMPLATEEND = "${x-repeat-end}";
+    private static final String XROWCOUNT = "${x-row-count}";
 
     private String body;
 
@@ -35,6 +36,7 @@ public class BodyTemplate {
 
             String result = body.replace(XCURRENTDATE, currentDate);
             result = result.replace(XRECIPIENTEMAIL, email);
+            result = result.replace(XROWCOUNT, records.size()+"");
 
             // lets get the prefix/template/postfix
             final String prefix = getPrefix(result);

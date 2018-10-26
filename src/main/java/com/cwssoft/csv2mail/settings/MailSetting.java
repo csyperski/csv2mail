@@ -1,6 +1,3 @@
-/*
- *  Copyright (C) 2016 Charles Syperski <csyperski@gmail.com> - CWS Software LLC
- */
 package com.cwssoft.csv2mail.settings;
 
 import java.io.Serializable;

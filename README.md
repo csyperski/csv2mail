@@ -5,7 +5,8 @@ A simple java application to parse CSV files, group by email address, and send s
 
 ![Overview](https://www.cwssoft.com/wp-content/uploads/2018/10/csv2mail.png)
 
-Csv2mail takes a CSV file with a column containing an email address, groups the data by the email address and sends the subset of data to the grouped email address.  Csv2mail can attach the resulting subset of data as a CSV file or expose it to an HTML template.  
+Csv2mail takes a CSV file with a column containing an email address, groups the data by the email address and sends the subset of data to the grouped email address.  Csv2mail can attach the resulting subset of data as a CSV file or expose it to an HTML template.
+  
 
 ### Prerequisites
 * maven

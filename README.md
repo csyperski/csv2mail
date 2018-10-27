@@ -40,6 +40,16 @@ The application is executed with the following command:
 ```bash
 java -jar csv2mail.jar config-file-path html-template-path csv-path
 ```
+If you would like to write the output to a log file, specify the directory where you'd like to write the log files via the argument:
+
+```bash
+-DLOG_PATH1=/var/log/csv2mail/
+``` 
+or 
+```bash
+java -DLOG_PATH1=/var/log/csv2mail/ -jar csv2mail.jar config-file-path html-template-path csv-path
+```
+
 
 ## Authors
 

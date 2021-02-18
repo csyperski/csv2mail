@@ -62,6 +62,11 @@ public class Driver {
         // load a few of the required settings
         final String emailColumn = settingService.getSetting(SettingService.EMAIL_COLUMN).orElse(null);
 
+        // should we group by the email address column and send a single email instead of multiple
+        // group = true will send 1 email
+        // group = false will send multiple emails
+        final boolean group = settingService.getSetting(SettingService.EMAIL_GROUP).map( Boolean::parseBoolean ).orElse(Boolean.TRUE);
+
         final int queueSize = settingService.getSetting(EMAIL_QUEUE_SIZE).map(s -> Ints.tryParse(s)).filter(s -> s != null).orElse(10000);
 
         // setup the mail system
@@ -91,7 +96,19 @@ public class Driver {
         logger.debug("Found {} email address to send to.", allEmailAddresses.size());
         if (!allEmailAddresses.isEmpty()) {
             queueProcessor.start();
-            int count = allEmailAddresses.stream().mapToInt( email -> enqueueSingle(mailManager, settingService, email, recordMap.get(email), bodyTemplate ) ? 1 : 0).sum();
+            int count = 0;
+            if ( group ) {
+                logger.debug("Processing grouped emails.");
+                count = allEmailAddresses.stream().mapToInt(email -> enqueueSingle(mailManager, settingService, email, recordMap.get(email), bodyTemplate) ? 1 : 0).sum();
+            } else {
+                logger.debug("Processing non-grouped emails.");
+                count = allEmailAddresses.stream().mapToInt(email ->
+                    // instead of processing the entire list, we'll return only a single record
+                    recordMap.get(email).stream().mapToInt(
+                            csvRecord -> enqueueSingle(mailManager, settingService, email, Collections.singletonList(csvRecord), bodyTemplate) ? 1 : 0
+                    ).sum()
+                ).sum();
+            }
             logger.info("Queued {} email messages for delivery.", count);
         }
     }
@@ -213,7 +230,4 @@ public class Driver {
         System.err.println("Usage: java -jar csv2mail.jar config-file-path html-template-path csv-path");
         System.err.println();
     }
-
 }
-
-

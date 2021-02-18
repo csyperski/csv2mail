@@ -14,6 +14,7 @@ public class SettingService {
     private static Logger logger = LoggerFactory.getLogger(SettingService.class);
 
     public static final String EMAIL_COLUMN = "csv.field.email";
+    public static final String EMAIL_GROUP = "csv.group";
     public static final String EMAIL_SUBJECT = "mail.title";
     public static final String EMAIL_TEXT_BODY = "mail.body.text";
     public static final String EMAIL_QUEUE_SIZE = "mail.queue.maxsize";

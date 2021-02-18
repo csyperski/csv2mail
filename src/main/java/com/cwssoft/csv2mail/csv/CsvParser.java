@@ -26,7 +26,7 @@ public class CsvParser {
     }
 
     public Map<String, List<CSVRecord>> parse() {
-        try (Reader in = new FileReader(csvFile)) {
+        try ( Reader in = new FileReader(csvFile) ) {
             Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
 
             final Map<String, List<CSVRecord>> recordMap = new HashMap<>();

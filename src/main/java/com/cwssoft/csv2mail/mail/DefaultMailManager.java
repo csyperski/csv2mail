@@ -9,6 +9,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.RateLimiter;
+
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -117,11 +120,11 @@ public class DefaultMailManager implements MailManager {
 
     @Override
     public boolean sendMessage(String title, String htmlBody, String textBody, String to) {
-        return sendMessage(title, htmlBody, textBody, to, null, null, null);
+        return sendMessage(title, htmlBody, textBody, to, Collections.emptyList());
     }
 
     @Override
-    public boolean sendMessage(String title, String htmlBody, String textBody, String to, DataSource ds, String name, String description) {
+    public boolean sendMessage(String title, String htmlBody, String textBody, String to, List<DescriptionDataSource> dataSources) {
 
         if (!isEnabled()) {
             logger.warn("Unable to send message, system is disabled.");
@@ -182,8 +185,10 @@ public class DefaultMailManager implements MailManager {
             email.setHtmlMsg(isNullOrEmpty(htmlBody) ? "Please switch to plain text mode to view this message." : htmlBody);
             email.setTextMsg(isNullOrEmpty(textBody) ? "Please switch to HTML or rich text mode to view this message." : textBody);
 
-            if (ds != null) {
-                email.attach(ds, name, description, EmailAttachment.ATTACHMENT);
+            if (dataSources != null) {
+                for (DescriptionDataSource ds : dataSources) {
+                    email.attach(ds, ds.getName(), ds.getDescription(), EmailAttachment.ATTACHMENT);
+                }
             }
             double waitTime = rateLimiter.acquire();
             email.send();

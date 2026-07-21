@@ -146,6 +146,11 @@ public class Driver {
         final String textBody = settingService.getSetting(SettingService.EMAIL_TEXT_BODY).orElse("");
         final String csvOutputFields = settingService.getSetting(SettingService.EMAIL_CSV_OUTPUT).orElse("");
 
+        final String csvName = settingService.getSetting(EMAIL_CSV_OUTPUT_FILENAME).orElse("data.csv");
+        final String csvDescription = settingService.getSetting(EMAIL_CSV_OUTPUT_DESCRIPTION).orElse("");
+        final String pdfName = settingService.getSetting(EMAIL_PDF_OUTPUT_FILENAME).orElse("data.pdf");
+        final String pdfDescription = settingService.getSetting(EMAIL_PDF_OUTPUT_DESCRIPTION).orElse("");
+
         final List<String[]> csvRecords = convertCsvRecordsToList(records);
 
         if ( email == null || ! isValidEmail(email)) {
@@ -194,25 +199,26 @@ public class Driver {
                 maybePdf = pdfTemplate.processAsPdf(csvRecords);
             }
             if (maybeBody.isPresent()) {
-                Optional<DataSource> dataSourceCsv = Optional.empty();
+                Optional<DescriptionDataSource> dataSourceCsv = Optional.empty();
                 if (maybeSingleEmailData.isPresent()) {
                     try (InputStream inputStream = new ByteArrayInputStream(maybeSingleEmailData.map(s -> s.getBytes()).orElse(new byte[]{}));) {
-                        dataSourceCsv = Optional.of(new ByteArrayDataSource(inputStream, CSV_MIME));
+                        dataSourceCsv = Optional.of(new DescriptionDataSource(inputStream, CSV_MIME, csvName, csvDescription));
                     } catch (Exception e) {
                         logger.warn("Failed to create attachment: {}", e.getMessage(), e);
                     }
                 }
 
-                Optional<DataSource> dataSourcePdf = Optional.empty();
+                Optional<DescriptionDataSource> dataSourcePdf = Optional.empty();
                 if ( attachPdf && maybePdf.isPresent() ) {
                     try  {
-                        dataSourcePdf = Optional.of(new ByteArrayDataSource(maybePdf.get(), PDF_MIME));
+                        dataSourcePdf = Optional.of(new DescriptionDataSource(maybePdf.get(), PDF_MIME, pdfName, pdfDescription));
                     } catch (Exception e) {
                         logger.warn("Failed to create attachment: {}", e.getMessage(), e);
                     }
                 }
 
                 MailQueueTask queueTask = new MailQueueTask(email, title, maybeBody.get(), textBody);
+
                 dataSourceCsv.ifPresent(queueTask.getDataSources()::add);
                 dataSourcePdf.ifPresent(queueTask.getDataSources()::add);
 

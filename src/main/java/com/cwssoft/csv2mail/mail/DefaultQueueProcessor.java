@@ -66,7 +66,7 @@ public class DefaultQueueProcessor implements Runnable {
                     boolean success = false;
 
                     success = mailManager.sendMessage(t.getTitle(), t.getHtmlBody(), t.getTextBody(),
-                            t.getTo(), t.getDataSources().stream().findFirst().orElse(null), filename, description);
+                            t.getTo(), t.getDataSources());
 
                     if (success) {
                         logger.info("Message sent to: {}", t.getTo());

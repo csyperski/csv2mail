@@ -28,7 +28,7 @@ public class MailQueueTask implements Serializable {
     private final int priority;
 
     // attachment things
-    private final List<DataSource> dataSources = new ArrayList<>();
+    private final List<DescriptionDataSource> dataSources = new ArrayList<>();
 
     public MailQueueTask(String to, String title, String html, String text) {
         this(to, title, html, text, PRIORITY_NORMAL);
@@ -74,7 +74,7 @@ public class MailQueueTask implements Serializable {
         return textBody;
     }
 
-    public List<DataSource> getDataSources() {
+    public List<DescriptionDataSource> getDataSources() {
         return dataSources;
     }
 }

@@ -1,5 +1,6 @@
 package com.cwssoft.csv2mail.mail;
 
+import com.cwssoft.csv2mail.report.BodyTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

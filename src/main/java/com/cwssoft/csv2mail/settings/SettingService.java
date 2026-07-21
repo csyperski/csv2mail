@@ -23,6 +23,9 @@ public class SettingService {
     public static final String EMAIL_CSV_OUTPUT_FILENAME = "csv.output.filename";
     public static final String EMAIL_CSV_OUTPUT_DESCRIPTION = "csv.output.description";
     public static final String EMAIL_CSV_OUTPUT_ATTACH = "csv.attach";
+    public static final String EMAIL_PDF_OUTPUT_ATTACH = "pdf.attach";
+    public static final String EMAIL_PDF_OUTPUT_FILENAME = "pdf.output.filename";
+    public static final String EMAIL_PDF_OUTPUT_DESCRIPTION = "pdf.output.description";
 
 
     private volatile Properties properties;

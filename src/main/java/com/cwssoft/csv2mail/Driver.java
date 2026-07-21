@@ -3,6 +3,7 @@ package com.cwssoft.csv2mail;
 import com.cwssoft.csv2mail.csv.CsvBuilder;
 import com.cwssoft.csv2mail.csv.CsvParser;
 import com.cwssoft.csv2mail.mail.*;
+import com.cwssoft.csv2mail.report.BodyTemplate;
 import com.cwssoft.csv2mail.settings.DefaultMailSettingProvider;
 import com.cwssoft.csv2mail.settings.SettingService;
 import com.google.common.base.CharMatcher;
@@ -18,14 +19,15 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
 
+import static com.cwssoft.csv2mail.csv.CsvUtils.convertCsvRecordsToList;
 import static com.cwssoft.csv2mail.mail.EmailUtils.isValidEmail;
-import static com.cwssoft.csv2mail.settings.SettingService.EMAIL_CSV_OUTPUT_ATTACH;
-import static com.cwssoft.csv2mail.settings.SettingService.EMAIL_QUEUE_SIZE;
-import static com.cwssoft.csv2mail.settings.SettingService.EMAIL_QUEUE_TIMEOUT;
+import static com.cwssoft.csv2mail.settings.SettingService.*;
 
 public class Driver {
 
     private static final String CSV_MIME = "text/csv";
+    private static final String PDF_MIME = "application/pdf";
+
 
     public static final Logger logger = LoggerFactory.getLogger(Driver.class);
 
@@ -84,6 +86,17 @@ public class Driver {
             return;
         }
 
+        // load the pdf template - if used
+        final Optional<BodyTemplate> maybePdfTemplate = TemplateLoader.load(config.getHtmlPdfFile());
+        // let's see if we need to attach a PDF
+        final boolean attachPdf = settingService.getSetting(EMAIL_PDF_OUTPUT_ATTACH).map(Boolean::parseBoolean).orElse(Boolean.FALSE);
+        if ( attachPdf && ! maybeBodyTemplate.isPresent() ) {
+            logger.warn("Failed to load PDF template from: {}", config.getHtmlPdfFile());
+            System.exit(1);
+            return;
+        }
+
+
         // eagerly load the CSV and group by email
         final CsvParser csvParser = new CsvParser(config.getCsvFile(), emailColumn);
         final Map<String, List<CSVRecord>> recordMap = csvParser.parse();
@@ -92,6 +105,7 @@ public class Driver {
         final Thread queueProcessor = new Thread(new DefaultQueueProcessor(mailManager, settingService));
 
         final BodyTemplate bodyTemplate = maybeBodyTemplate.orElse(null);
+        final BodyTemplate pdfTemplate = maybePdfTemplate.orElse(null);
         final Set<String> allEmailAddresses = recordMap.keySet();
         logger.debug("Found {} email address to send to.", allEmailAddresses.size());
         if (!allEmailAddresses.isEmpty()) {
@@ -99,13 +113,13 @@ public class Driver {
             int count = 0;
             if ( group ) {
                 logger.debug("Processing grouped emails.");
-                count = allEmailAddresses.stream().mapToInt(email -> enqueueSingle(mailManager, settingService, email, recordMap.get(email), bodyTemplate) ? 1 : 0).sum();
+                count = allEmailAddresses.stream().mapToInt(email -> enqueueSingle(mailManager, settingService, email, recordMap.get(email), bodyTemplate, pdfTemplate) ? 1 : 0).sum();
             } else {
                 logger.debug("Processing non-grouped emails.");
                 count = allEmailAddresses.stream().mapToInt(email ->
                     // instead of processing the entire list, we'll return only a single record
                     recordMap.get(email).stream().mapToInt(
-                            csvRecord -> enqueueSingle(mailManager, settingService, email, Collections.singletonList(csvRecord), bodyTemplate) ? 1 : 0
+                            csvRecord -> enqueueSingle(mailManager, settingService, email, Collections.singletonList(csvRecord), bodyTemplate, pdfTemplate) ? 1 : 0
                     ).sum()
                 ).sum();
             }
@@ -117,17 +131,22 @@ public class Driver {
                                   final SettingService settingService,
                                   final String email,
                                   final List<CSVRecord> records,
-                                  final BodyTemplate bodyTemplate ) {
+                                  final BodyTemplate bodyTemplate,
+                                  final BodyTemplate pdfTemplate) {
 
         if ( settingService == null ) {
             logger.warn("Skipping: {} - Invalid setting service.", email);
             return false;
         }
 
-        final boolean attach = settingService.getSetting(EMAIL_CSV_OUTPUT_ATTACH).map( Boolean::valueOf ).orElse(Boolean.FALSE);
+        final boolean attachCsv = settingService.getSetting(EMAIL_CSV_OUTPUT_ATTACH).map( Boolean::valueOf ).orElse(Boolean.FALSE);
+        final boolean attachPdf = settingService.getSetting(EMAIL_PDF_OUTPUT_ATTACH).map( Boolean::valueOf ).orElse(Boolean.FALSE);
+
         final String title = settingService.getSetting(SettingService.EMAIL_SUBJECT).orElse("** No Subject **");
         final String textBody = settingService.getSetting(SettingService.EMAIL_TEXT_BODY).orElse("");
         final String csvOutputFields = settingService.getSetting(SettingService.EMAIL_CSV_OUTPUT).orElse("");
+
+        final List<String[]> csvRecords = convertCsvRecordsToList(records);
 
         if ( email == null || ! isValidEmail(email)) {
             logger.warn("Skipping: {} - Invalid email address.", email);
@@ -164,30 +183,47 @@ public class Driver {
                 .trimResults().splitToList(csvOutputFields);
 
         Optional<String> maybeSingleEmailData = Optional.empty();
-        if ( attach ) {
+        if ( attachCsv ) {
             maybeSingleEmailData = buildSingleEmailCsv(csvFields, records);
         }
 
-        final String body = bodyTemplate.process(email, records);
-        if (body != null) {
-            Optional<DataSource> ds = Optional.empty();
-            if ( maybeSingleEmailData.isPresent() ) {
-                try (InputStream inputStream = new ByteArrayInputStream(maybeSingleEmailData.map(s -> s.getBytes()).orElse( new byte[] {} ));) {
-                    ds = Optional.of(new ByteArrayDataSource(inputStream, CSV_MIME));
-                } catch (Exception e) {
-                    logger.warn("Failed to create attachment: {}", e.getMessage(), e);
-                }
+        try {
+            final Optional<String> maybeBody = bodyTemplate.processAsHtml(csvRecords);
+            Optional<byte[]> maybePdf = Optional.empty();
+            if ( attachPdf ) {
+                maybePdf = pdfTemplate.processAsPdf(csvRecords);
             }
+            if (maybeBody.isPresent()) {
+                Optional<DataSource> dataSourceCsv = Optional.empty();
+                if (maybeSingleEmailData.isPresent()) {
+                    try (InputStream inputStream = new ByteArrayInputStream(maybeSingleEmailData.map(s -> s.getBytes()).orElse(new byte[]{}));) {
+                        dataSourceCsv = Optional.of(new ByteArrayDataSource(inputStream, CSV_MIME));
+                    } catch (Exception e) {
+                        logger.warn("Failed to create attachment: {}", e.getMessage(), e);
+                    }
+                }
 
-            MailQueueTask queueTask = new MailQueueTask(email, title, body, textBody);
-            ds.ifPresent( queueTask.getDataSources()::add );
+                Optional<DataSource> dataSourcePdf = Optional.empty();
+                if ( attachPdf && maybePdf.isPresent() ) {
+                    try  {
+                        dataSourcePdf = Optional.of(new ByteArrayDataSource(maybePdf.get(), PDF_MIME));
+                    } catch (Exception e) {
+                        logger.warn("Failed to create attachment: {}", e.getMessage(), e);
+                    }
+                }
 
-            mailManager.enqueue(queueTask);
-            return true;
-        } else {
-            logger.warn("Skipping: {} - Invalid Body.");
+                MailQueueTask queueTask = new MailQueueTask(email, title, maybeBody.get(), textBody);
+                dataSourceCsv.ifPresent(queueTask.getDataSources()::add);
+                dataSourcePdf.ifPresent(queueTask.getDataSources()::add);
+
+                mailManager.enqueue(queueTask);
+                return true;
+            } else {
+                logger.warn("Skipping: {} - Invalid Body.");
+            }
+        } catch ( Exception e ) {
+            logger.warn("Error creating mail queue item: {}", e.getMessage(), e);
         }
-
         return false;
     }
 
@@ -218,16 +254,16 @@ public class Driver {
     }
 
     private Optional<Config> parseConfig(String[] args) {
-        logger.debug("Args: {} (3 expected)", args.length);
-        if (args != null && args.length == 3) {
-            return Optional.ofNullable(new Config(args[0], args[1], args[2]));
+        logger.debug("Args: {} (4 expected)", args.length);
+        if (args != null && args.length == 4) {
+            return Optional.ofNullable(new Config(args[0], args[1], args[2], args[3]));
         }
         return Optional.empty();
     }
 
     private void printUsage() {
         System.err.println();
-        System.err.println("Usage: java -jar csv2mail.jar config-file-path html-template-path csv-path");
+        System.err.println("Usage: java -jar csv2mail.jar config-file-path body-template pdf-template csv-path");
         System.err.println();
     }
 }

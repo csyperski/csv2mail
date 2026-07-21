@@ -13,7 +13,7 @@ class BodyTemplateTest {
 
         String body = "abc${x-repeat-start}middle${x-repeat-end}xyz";
 
-        BodyTemplate instance = new BodyTemplate(body);
+        BodyTemplateOld instance = new BodyTemplateOld(body);
         String result = instance.getPrefix(body);
 
         assertEquals("abc", result);
@@ -26,7 +26,7 @@ class BodyTemplateTest {
 
         String body = "abc${x-repeat-start}middle${x-repeat-end}xyz";
 
-        BodyTemplate instance = new BodyTemplate(body);
+        BodyTemplateOld instance = new BodyTemplateOld(body);
         String result = instance.getPostfix(body);
 
         assertEquals("xyz", result);

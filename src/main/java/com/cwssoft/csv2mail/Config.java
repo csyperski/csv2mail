@@ -4,17 +4,21 @@ public class Config {
 
     private final String configFile;
     private final String htmlEmailBodyFile;
+    private final String htmlPdfFile;
     private final String csvFile;
 
-    public Config(String configFile, String htmlEmailBodyFile, String csvFile) {
+    public Config(String configFile, String htmlEmailBodyFile, String htmlPdfFile, String csvFile) {
         this.configFile = configFile;
         this.htmlEmailBodyFile = htmlEmailBodyFile;
+        this.htmlPdfFile = htmlPdfFile;
         this.csvFile = csvFile;
     }
 
     public String getHtmlEmailBodyFile() {
         return htmlEmailBodyFile;
     }
+
+    public String getHtmlPdfFile() { return  htmlPdfFile; }
 
     public String getConfigFile() {
         return configFile;

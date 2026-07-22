@@ -26,16 +26,6 @@ public class DescriptionDataSource extends ByteArrayDataSource {
         this.setName(name);
     }
 
-    @Override
-    public String getName() {
-        return super.getName();
-    }
-
-    @Override
-    public String getContentType() {
-        return super.getContentType();
-    }
-
     public String getDescription() {
         return description;
     }

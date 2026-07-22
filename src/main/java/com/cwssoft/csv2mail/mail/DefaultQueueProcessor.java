@@ -35,7 +35,7 @@ public class DefaultQueueProcessor implements Runnable {
 
         final int queueTimeout = settingService.getSetting(SettingService.EMAIL_QUEUE_TIMEOUT)
                 .map(Ints::tryParse)
-                .filter( v -> v != null )
+                .filter(v -> true)
                 .orElse(60);
 
         final String filename = settingService.getSetting(SettingService.EMAIL_CSV_OUTPUT_FILENAME)

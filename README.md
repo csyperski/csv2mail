@@ -31,14 +31,14 @@ You need three files for this application to function:
 
 * a configuration file (docs/csv2mail.properties)
 * a csv file (docs/csv2mail.csv)
-* a HTML email template (docs/csv2mail.html)
+* a Thymeleaf HTML email template (docs/csv2mail.html)
 
 You'll need to configure the csv2email.properties file to include your SMTP connection information to get started.
 
 The application can be executed with the following command:
 
 ```bash
-java -jar csv2mail.jar config-file-path html-template-path csv-path
+java -jar csv2mail.jar config-file-path html-template-path pdf-template-path csv-path
 ```
 If you would like to write the output to a log file, specify the directory where you'd like to write the log files via the argument:
 
@@ -47,7 +47,7 @@ If you would like to write the output to a log file, specify the directory where
 ``` 
 or 
 ```bash
-java -DLOG_PATH=/var/log/csv2mail/ -jar csv2mail.jar config-file-path html-template-path csv-path
+java -DLOG_PATH=/var/log/csv2mail/ -jar csv2mail.jar config-file-path html-template-path pdf-template-path csv-path
 ```
 
 

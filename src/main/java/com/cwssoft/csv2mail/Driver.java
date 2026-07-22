@@ -13,8 +13,6 @@ import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.activation.DataSource;
-import javax.mail.util.ByteArrayDataSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
@@ -27,7 +25,6 @@ public class Driver {
 
     private static final String CSV_MIME = "text/csv";
     private static final String PDF_MIME = "application/pdf";
-
 
     public static final Logger logger = LoggerFactory.getLogger(Driver.class);
 
@@ -54,7 +51,6 @@ public class Driver {
 
         // setting service to pull settings from our properties file
         final SettingService settingService = new SettingService(config.getConfigFile());
-
         if ( ! settingService.load() ) {
             logger.warn("Failed to load settings from: {}", config.getConfigFile());
             System.exit(1);
@@ -90,7 +86,7 @@ public class Driver {
         final Optional<BodyTemplate> maybePdfTemplate = TemplateLoader.load(config.getHtmlPdfFile());
         // let's see if we need to attach a PDF
         final boolean attachPdf = settingService.getSetting(EMAIL_PDF_OUTPUT_ATTACH).map(Boolean::parseBoolean).orElse(Boolean.FALSE);
-        if ( attachPdf && ! maybeBodyTemplate.isPresent() ) {
+        if ( attachPdf && ! maybePdfTemplate.isPresent() ) {
             logger.warn("Failed to load PDF template from: {}", config.getHtmlPdfFile());
             System.exit(1);
             return;
@@ -139,15 +135,18 @@ public class Driver {
             return false;
         }
 
+        // what files are we attaching
         final boolean attachCsv = settingService.getSetting(EMAIL_CSV_OUTPUT_ATTACH).map( Boolean::valueOf ).orElse(Boolean.FALSE);
         final boolean attachPdf = settingService.getSetting(EMAIL_PDF_OUTPUT_ATTACH).map( Boolean::valueOf ).orElse(Boolean.FALSE);
 
+        // email body and title, and requested output fields
         final String title = settingService.getSetting(SettingService.EMAIL_SUBJECT).orElse("** No Subject **");
         final String textBody = settingService.getSetting(SettingService.EMAIL_TEXT_BODY).orElse("");
         final String csvOutputFields = settingService.getSetting(SettingService.EMAIL_CSV_OUTPUT).orElse("");
 
         final String csvName = settingService.getSetting(EMAIL_CSV_OUTPUT_FILENAME).orElse("data.csv");
         final String csvDescription = settingService.getSetting(EMAIL_CSV_OUTPUT_DESCRIPTION).orElse("");
+
         final String pdfName = settingService.getSetting(EMAIL_PDF_OUTPUT_FILENAME).orElse("data.pdf");
         final String pdfDescription = settingService.getSetting(EMAIL_PDF_OUTPUT_DESCRIPTION).orElse("");
 
@@ -163,12 +162,12 @@ public class Driver {
             return false;
         }
 
-        if ( title == null || title.trim().length() == 0 ) {
+        if ( title == null || title.trim().isEmpty()) {
             logger.warn("Skipping: {} - Invalid message title.");
             return false;
         }
 
-        if ( textBody == null || textBody.trim().length() == 0 ) {
+        if ( textBody == null || textBody.trim().isEmpty()) {
             logger.warn("Skipping: {} - Invalid textBody.");
             return false;
         }
@@ -201,7 +200,7 @@ public class Driver {
             if (maybeBody.isPresent()) {
                 Optional<DescriptionDataSource> dataSourceCsv = Optional.empty();
                 if (maybeSingleEmailData.isPresent()) {
-                    try (InputStream inputStream = new ByteArrayInputStream(maybeSingleEmailData.map(s -> s.getBytes()).orElse(new byte[]{}));) {
+                    try (InputStream inputStream = new ByteArrayInputStream(maybeSingleEmailData.map(s -> s.getBytes()).orElse(new byte[]{}))) {
                         dataSourceCsv = Optional.of(new DescriptionDataSource(inputStream, CSV_MIME, csvName, csvDescription));
                     } catch (Exception e) {
                         logger.warn("Failed to create attachment: {}", e.getMessage(), e);
@@ -246,12 +245,12 @@ public class Driver {
 
         final CsvBuilder csv = new CsvBuilder();
         if ( ! csvFields.isEmpty() ) {
-            csvFields.stream().forEachOrdered(f -> csv.addCell(f));
+            csvFields.forEach(f -> csv.addCell(f));
             csv.newLine();
         }
 
-        records.stream().forEachOrdered( row -> {
-            csvFields.stream().forEachOrdered( field -> {
+        records.forEach(row -> {
+            csvFields.forEach(field -> {
                 csv.addCell(row.get(field));
             });
             csv.newLine();

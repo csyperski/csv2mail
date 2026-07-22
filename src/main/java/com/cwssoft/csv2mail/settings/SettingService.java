@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -29,7 +31,7 @@ public class SettingService {
 
 
     private volatile Properties properties;
-    private String path;
+    private final String path;
 
     public SettingService(String path) {
         this.path = path;
@@ -37,12 +39,12 @@ public class SettingService {
 
     public boolean load() {
         synchronized (this) {
-            try (InputStream is = new FileInputStream(path)) {
+            try (InputStream is = Files.newInputStream(Paths.get(path))) {
                 properties = new Properties();
                 properties.load(is);
                 return true;
             } catch (IOException ex) {
-                logger.warn("Failed to load settings ({}) due to: ", path, ex.getMessage(), ex);
+                logger.warn("Failed to load settings ({}) due to: {}", path, ex.getMessage(), ex);
             }
         }
         return false;

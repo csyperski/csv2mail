@@ -34,7 +34,7 @@ public class CsvParser {
             for (CSVRecord record : records) {
                 final String email = record.get(emailColumn);
 
-                if (email != null && email.trim().length() > 0) {
+                if (email != null && !email.trim().isEmpty()) {
                     final String cleanEmail = email.trim().toLowerCase(Locale.US);
                     if (isValidEmail(cleanEmail)) {
                         if (recordMap.containsKey(cleanEmail)) {

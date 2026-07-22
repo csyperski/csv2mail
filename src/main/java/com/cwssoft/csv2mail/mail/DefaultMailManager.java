@@ -53,7 +53,7 @@ public class DefaultMailManager implements MailManager {
             logger.debug("Loading email Settings...");
 
             rateLimiter = RateLimiter.create(mailSettingProvider.getRateLimit()
-                    .filter( s -> s.getValue().map( z -> z.trim().length() > 0 ).orElse(Boolean.FALSE))
+                    .filter( s -> s.getValue().map( z -> !z.trim().isEmpty()).orElse(Boolean.FALSE))
                     .flatMap(s -> s.getValueAsInt()).orElse(3)
             );
 
@@ -101,7 +101,7 @@ public class DefaultMailManager implements MailManager {
 
     private int getSmtpPort() {
         return mailSettingProvider.getPort()
-                .filter( s -> s.getValue().map( z -> z.trim().length() > 0).orElse(Boolean.FALSE) )
+                .filter( s -> s.getValue().map( z -> !z.trim().isEmpty()).orElse(Boolean.FALSE) )
                 .flatMap( MailSetting::getValueAsInt ).orElse( 25 );
     }
 

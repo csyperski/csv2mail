@@ -17,7 +17,7 @@ public class BodyTemplate {
 
     private final static Logger logger = LoggerFactory.getLogger(BodyTemplate.class);
 
-    private String body;
+    private final String body;
 
     public BodyTemplate(String body) {
         this.body = body;

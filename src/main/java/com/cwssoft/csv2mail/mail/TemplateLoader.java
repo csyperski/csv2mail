@@ -16,9 +16,7 @@ public class TemplateLoader {
 
     public static Optional<BodyTemplate> load(String file) {
         try {
-            String body = Files.readAllLines(FileSystems.getDefault().getPath(file))
-                    .stream()
-                    .collect(Collectors.joining("\n"));
+            String body = String.join("\n", Files.readAllLines(FileSystems.getDefault().getPath(file)));
             return Optional.of(new BodyTemplate(body));
         } catch (IOException ioEx) {
             logger.warn("Failed to open: {} due to: {}", file, ioEx.getMessage(), ioEx);
